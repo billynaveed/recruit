@@ -1,0 +1,325 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum JobStatus {
+  DRAFT
+  OPEN
+  CLOSED
+  ARCHIVED
+}
+
+enum InviteStatus {
+  ACTIVE
+  EXPIRED
+  REVOKED
+}
+
+enum CandidateStage {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  REVIEWING
+  SHORTLISTED
+  OFFER
+  HIRED
+  REJECTED
+  WITHDRAWN
+  ARCHIVED
+}
+
+enum CandidateStatus {
+  ACTIVE
+  INACTIVE
+  ARCHIVED
+}
+
+enum ReviewRecommendation {
+  STRONG_YES
+  YES
+  LEAN_NO
+  NO
+}
+
+enum ReviewStatus {
+  PENDING
+  SUBMITTED
+  WITHDRAWN
+}
+
+model AdminSession {
+  id        String   @id @default(cuid())
+  email     String
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  @@index([email])
+}
+
+model Job {
+  id                        String            @id @default(cuid())
+  title                     String
+  slug                      String            @unique
+  department                String?
+  location                  String?
+  employmentType            String?
+  status                    JobStatus         @default(DRAFT)
+  descriptionSource         String?
+  descriptionText           String
+  descriptionFileName       String?
+  roleQuestionGenerationRaw String?
+  customQuestionPrompt      String?
+  createdByEmail            String
+  createdAt                 DateTime          @default(now())
+  updatedAt                 DateTime          @updatedAt
+  invites                   Invite[]
+  bulkInviteLinks           BulkInviteLink[]
+  roleQuestions             JobRoleQuestion[]
+  auditLogs                 AuditLog[]
+  candidates                Candidate[]
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+model JobRoleQuestion {
+  id        String   @id @default(cuid())
+  jobId     String
+  prompt    String
+  wordLimit Int      @default(250)
+  sortOrder Int
+  source    String   @default("GENERATED")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([jobId, sortOrder])
+}
+
+model Invite {
+  id                String           @id @default(cuid())
+  jobId             String
+  candidateName     String
+  candidateEmail    String
+  token             String           @unique
+  expiresAt         DateTime
+  status            InviteStatus     @default(ACTIVE)
+  notes             String?
+  createdByEmail    String
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  lastCopiedAt      DateTime?
+  revokedAt         DateTime?
+  bulkInviteLinkId  String?
+  bulkInviteLink    BulkInviteLink?  @relation(fields: [bulkInviteLinkId], references: [id], onDelete: SetNull)
+  job               Job              @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  auditLogs         AuditLog[]
+  candidate         Candidate?
+
+  @@index([jobId, createdAt])
+  @@index([candidateEmail])
+  @@index([status, expiresAt])
+  @@index([bulkInviteLinkId])
+}
+
+model BulkInviteLink {
+  id             String       @id @default(cuid())
+  jobId          String
+  token          String       @unique
+  label          String?
+  expiresAt      DateTime
+  status         InviteStatus @default(ACTIVE)
+  createdByEmail String
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  revokedAt      DateTime?
+  job            Job          @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  invites        Invite[]
+
+  @@index([jobId, createdAt])
+  @@index([status, expiresAt])
+}
+
+model Candidate {
+  id                String             @id @default(cuid())
+  jobId             String
+  inviteId          String             @unique
+  job               Job                @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  invite            Invite             @relation(fields: [inviteId], references: [id], onDelete: Cascade)
+  name              String
+  email             String
+  notes             String?
+  stage             CandidateStage     @default(IN_PROGRESS)
+  status            CandidateStatus    @default(ACTIVE)
+  currentStage      Int                @default(1)
+  completionPercent Int                @default(0)
+  reportStatus      String?
+  lastActiveAt      DateTime?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  submission        Submission?
+  sessions          CandidateSession[]
+  events            CandidateEvent[]
+  reviews           Review[]
+
+  @@index([jobId, stage])
+  @@index([email])
+}
+
+model CandidateSession {
+  id              String           @id @default(cuid())
+  candidateId     String
+  candidate       Candidate        @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  startedAt       DateTime         @default(now())
+  lastEventAt     DateTime         @default(now())
+  durationSeconds Int              @default(0)
+  userAgent       String?
+  events          CandidateEvent[]
+
+  @@index([candidateId, startedAt])
+}
+
+model CandidateEvent {
+  id           String            @id @default(cuid())
+  candidateId  String
+  candidate    Candidate         @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  jobId        String
+  sessionId    String?
+  session      CandidateSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  eventType    String
+  stage        Int?
+  metadataJson String?
+  occurredAt   DateTime          @default(now())
+
+  @@index([candidateId, occurredAt])
+  @@index([jobId, eventType, occurredAt])
+}
+
+model Submission {
+  id                 String              @id @default(cuid())
+  candidateId        String              @unique
+  candidate          Candidate           @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  consentGiven       Boolean             @default(false)
+  consentAt          DateTime?
+  cvPath             String?
+  cvText             String?
+  cvExtractedAt      DateTime?
+  cvExtractError     String?
+  coverLetter        String?
+  projects           Json                @default("[]")
+  roleAnswers        Json                @default("{}")
+  standardAnswers    Json                @default("{}")
+  psychoAnswers      Json                @default("{}")
+  psychoScores       Json?
+  finalReflection    String?
+  submittedAt        DateTime?
+  synthesisJson      Json?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  itemScores         ItemScore[]
+  dimensionEstimates DimensionEstimate[]
+}
+
+model Review {
+  id              String                @id @default(cuid())
+  candidateId     String
+  candidate       Candidate             @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  reviewerEmail   String
+  assignedByEmail String
+  status          ReviewStatus          @default(PENDING)
+  recommendation  ReviewRecommendation?
+  notes           String?
+  assignedAt      DateTime              @default(now())
+  submittedAt     DateTime?
+  withdrawnAt     DateTime?
+  updatedAt       DateTime              @updatedAt
+
+  @@index([reviewerEmail, status])
+  @@index([candidateId, status])
+  @@index([status, assignedAt])
+}
+
+model PromptTemplate {
+  id        String   @id @default(cuid())
+  key       String   @unique // "star_scoring" | "followup_generation"
+  body      String
+  version   Int      @default(1)
+  updatedAt DateTime @updatedAt
+  updatedBy String?
+}
+
+model ItemScore {
+  id             String     @id @default(cuid())
+  submissionId   String
+  submission     Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  itemId         String // e.g. "C-S1"
+  rubricVersion  String // e.g. "v1"
+  modelUsed      String // e.g. "claude-sonnet-4-6"
+  responseHash   String // sha256 of response text
+  scoredAt       DateTime   @default(now())
+  features       Json
+  bandEstimate   String
+  rulesFired     Json
+  rawLlmResponse String
+  status         String     @default("scored") // "scored" | "scoring_failed" | "insufficient"
+
+  @@unique([submissionId, itemId, rubricVersion, responseHash])
+  @@index([submissionId])
+}
+
+model DimensionEstimate {
+  id                String     @id @default(cuid())
+  submissionId      String
+  submission        Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  dimension         String
+  band              String
+  confidence        String
+  contributingItems Json
+  computedAt        DateTime   @default(now())
+
+  @@unique([submissionId, dimension])
+  @@index([submissionId])
+}
+
+model StandardQuestion {
+  id        String  @id @default(cuid())
+  prompt    String
+  wordLimit Int     @default(300)
+  sortOrder Int
+  active    Boolean @default(true)
+}
+
+model PsychometricItem {
+  id        String  @id @default(cuid())
+  itemId    String  @unique
+  itemType  String
+  body      String
+  options   Json?
+  construct String
+  minLength Int?
+  sortOrder Int
+  active    Boolean @default(true)
+}
+
+model AuditLog {
+  id           String   @id @default(cuid())
+  actorEmail   String
+  action       String
+  entityType   String
+  entityId     String
+  jobId        String?
+  inviteId     String?
+  metadataJson String?
+  createdAt    DateTime @default(now())
+  job          Job?     @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  invite       Invite?  @relation(fields: [inviteId], references: [id], onDelete: Cascade)
+
+  @@index([entityType, entityId])
+  @@index([jobId, createdAt])
+  @@index([inviteId, createdAt])
+  @@index([createdAt])
+}

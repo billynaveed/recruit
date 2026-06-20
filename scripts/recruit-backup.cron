@@ -1,0 +1,10 @@
+# /etc/cron.d/recruit-backup
+# Nightly DB backup for Recruit. Edit the path below to your checkout, then:
+#   sudo cp scripts/recruit-backup.cron /etc/cron.d/recruit-backup
+#   sudo chmod 644 /etc/cron.d/recruit-backup
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+MAILTO=""
+
+# Run at 03:15 UTC every day. Replace /path/to/recruit with your checkout path.
+15 3 * * * root /path/to/recruit/scripts/backup-db.sh >/dev/null 2>&1

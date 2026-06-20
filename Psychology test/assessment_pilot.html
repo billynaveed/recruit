@@ -1,0 +1,1318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Candidate assessment — pilot</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..600&family=Work+Sans:wght@300;400;500;600&display=swap">
+<style>
+  :root {
+    --bg: #F7F3EC;
+    --bg-card: #FBF8F2;
+    --ink: #1A1612;
+    --ink-soft: #5A5148;
+    --ink-faint: #9A8F82;
+    --accent: #1E3A5F;
+    --accent-soft: #E8EAF0;
+    --rule: #D4CCBE;
+    --error: #9C3A2A;
+    --success: #3A5E3A;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Work Sans', -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+  .page {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 40px 20px 120px;
+  }
+  .section-label {
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 500;
+    margin-bottom: 16px;
+  }
+  .prompt {
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 400;
+    line-height: 1.35;
+    color: var(--ink);
+    margin: 0 0 28px;
+    letter-spacing: -0.01em;
+    font-size: 27px;
+    white-space: pre-wrap;
+  }
+  .prompt.small { font-size: 22px; }
+  .prompt strong { font-weight: 600; }
+  .hint {
+    font-size: 14px;
+    color: var(--ink-soft);
+    font-style: italic;
+    margin-bottom: 24px;
+    line-height: 1.6;
+  }
+  .question-line {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--ink);
+    margin-bottom: 20px;
+  }
+
+  /* Progress */
+  .progress {
+    width: 100%;
+    margin-bottom: 48px;
+  }
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 8px;
+  }
+  .progress-bar {
+    width: 100%;
+    height: 2px;
+    background: var(--rule);
+    position: relative;
+  }
+  .progress-fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    background: var(--accent);
+    transition: width 400ms ease;
+  }
+
+  /* Nav footer */
+  .nav-footer {
+    margin-top: 48px;
+    padding-top: 24px;
+    border-top: 1px solid var(--rule);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .back-btn {
+    background: transparent;
+    border: none;
+    color: var(--ink-soft);
+    font-size: 14px;
+    font-family: inherit;
+    padding: 10px 0;
+    cursor: pointer;
+    text-decoration: underline;
+    text-decoration-color: var(--rule);
+    text-underline-offset: 4px;
+  }
+  .continue-btn {
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    padding: 14px 32px;
+    font-size: 14px;
+    font-family: inherit;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 200ms;
+  }
+  .continue-btn:disabled {
+    background: var(--rule);
+    color: var(--ink-faint);
+    cursor: not-allowed;
+  }
+  .extra-note {
+    font-size: 12px;
+    color: var(--ink-faint);
+    margin-top: 4px;
+  }
+
+  /* Inputs */
+  textarea, input[type="text"] {
+    width: 100%;
+    padding: 18px 20px;
+    font-size: 16px;
+    font-family: 'Work Sans', sans-serif;
+    line-height: 1.6;
+    background: var(--bg-card);
+    border: 1px solid var(--rule);
+    color: var(--ink);
+    outline: none;
+    resize: vertical;
+    border-radius: 0;
+  }
+  textarea { min-height: 200px; }
+  textarea:focus, input[type="text"]:focus { border-color: var(--accent); }
+  input[type="text"] {
+    padding: 16px 18px;
+    font-size: 18px;
+    font-family: 'Fraunces', serif;
+  }
+
+  /* Character counter */
+  .char-counter {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--ink-faint);
+    margin-top: 8px;
+  }
+  .char-counter.ok { color: var(--success); }
+
+  /* Option rows (radio-like) */
+  .opt-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 16px 18px;
+    background: var(--bg-card);
+    border: 1px solid var(--rule);
+    cursor: pointer;
+    transition: all 150ms;
+    margin-bottom: 10px;
+  }
+  .opt-row.selected {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+  }
+  .opt-row input[type="radio"] {
+    margin-top: 4px;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+  .opt-row span { font-size: 15px; line-height: 1.6; color: var(--ink); }
+  .opt-letter { font-weight: 500; color: var(--accent); margin-right: 8px; }
+
+  /* FC pair groups */
+  .fc-group { display: flex; flex-direction: column; gap: 36px; margin-bottom: 16px; }
+  .fc-pair { display: flex; flex-direction: column; gap: 10px; }
+  .fc-header {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--ink-soft);
+    margin-bottom: 14px;
+  }
+
+  /* Ranking */
+  .rank-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
+    background: var(--bg-card);
+    border: 1px solid var(--rule);
+    margin-bottom: 14px;
+  }
+  .rank-row select {
+    padding: 8px 10px;
+    font-family: 'Fraunces', serif;
+    font-size: 18px;
+    background: var(--bg);
+    border: 1px solid var(--rule);
+    color: var(--ink);
+    min-width: 56px;
+    cursor: pointer;
+    border-radius: 0;
+  }
+  .rank-label {
+    font-family: 'Fraunces', serif;
+    font-size: 20px;
+    color: var(--ink);
+    margin-bottom: 4px;
+  }
+  .rank-desc { font-size: 14px; color: var(--ink-soft); line-height: 1.5; }
+
+  /* Likert */
+  .likert-item { margin-bottom: 36px; }
+  .likert-statement {
+    font-family: 'Fraunces', serif;
+    font-size: 18px;
+    line-height: 1.5;
+    color: var(--ink);
+    margin-bottom: 14px;
+    font-style: italic;
+  }
+  .likert-options { display: flex; flex-direction: column; gap: 8px; }
+  .likert-options .opt-row { padding: 12px 16px; margin-bottom: 0; }
+
+  /* SJT best/worst */
+  .sjt-card {
+    padding: 18px 20px;
+    background: var(--bg-card);
+    border: 1px solid var(--rule);
+    transition: border-color 150ms;
+    margin-bottom: 16px;
+  }
+  .sjt-card.best { border-color: var(--accent); }
+  .sjt-card.worst { border-color: var(--error); }
+  .sjt-text { font-size: 15px; line-height: 1.6; color: var(--ink); margin-bottom: 12px; }
+  .sjt-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
+  .sjt-btn {
+    padding: 8px 14px;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-family: inherit;
+    font-weight: 500;
+    background: transparent;
+    border: 1px solid;
+    cursor: pointer;
+    transition: all 150ms;
+  }
+  .sjt-btn.best-btn { color: var(--accent); border-color: var(--accent); }
+  .sjt-btn.best-btn.active { background: var(--accent); color: var(--bg); }
+  .sjt-btn.worst-btn { color: var(--error); border-color: var(--error); }
+  .sjt-btn.worst-btn.active { background: var(--error); color: var(--bg); }
+
+  /* Tooltip */
+  .tt-term {
+    border-bottom: 1px dotted var(--accent);
+    cursor: help;
+    color: var(--accent);
+    position: relative;
+  }
+  .tt-popup {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    width: 280px;
+    max-width: 80vw;
+    padding: 12px 14px;
+    background: var(--ink);
+    color: var(--bg);
+    font-size: 13px;
+    font-family: 'Work Sans', sans-serif;
+    font-weight: 400;
+    line-height: 1.5;
+    border-radius: 2px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    z-index: 10;
+    white-space: normal;
+    text-align: left;
+    display: none;
+  }
+  .tt-popup.visible { display: block; }
+
+  /* Intro/consent */
+  h1.display {
+    font-family: 'Fraunces', serif;
+    font-size: 42px;
+    font-weight: 400;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    margin: 0 0 32px;
+    color: var(--ink);
+  }
+  .consent-note {
+    background: var(--bg-card);
+    border: 1px solid var(--rule);
+    padding: 20px 24px;
+    margin-bottom: 32px;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--ink-soft);
+  }
+  .consent-note strong { color: var(--ink); display: block; margin-bottom: 8px; }
+  .consent-check {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    cursor: pointer;
+    margin-bottom: 8px;
+  }
+  .consent-check input {
+    margin-top: 4px;
+    width: 18px;
+    height: 18px;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+  .consent-check span { font-size: 15px; color: var(--ink); line-height: 1.6; }
+  ul.intro-list { padding-left: 24px; margin-bottom: 20px; }
+  ul.intro-list li { margin-bottom: 10px; }
+
+  /* Summary */
+  .summary-label {
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--success);
+    font-weight: 500;
+    margin-bottom: 24px;
+  }
+  .summary-btns { display: flex; gap: 12px; margin-bottom: 32px; flex-wrap: wrap; }
+  .summary-btns button {
+    padding: 12px 24px;
+    font-size: 13px;
+    font-family: inherit;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+  }
+  .btn-secondary {
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+  }
+  .btn-tertiary {
+    background: transparent;
+    color: var(--ink-soft);
+    border: 1px solid var(--rule);
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  .summary-textarea {
+    width: 100%;
+    padding: 20px;
+    font-size: 13px;
+    font-family: ui-monospace, Menlo, Monaco, monospace;
+    line-height: 1.6;
+    background: var(--bg-card);
+    border: 1px solid var(--rule);
+    color: var(--ink);
+    min-height: 500px;
+    resize: vertical;
+  }
+</style>
+</head>
+<body>
+<div id="app" class="page"></div>
+
+<script>
+// ============================================================
+// ITEM CONTENT
+// ============================================================
+const ITEMS = [
+  { id: 'consent', type: 'consent' },
+  { id: 'pilot_id', type: 'pilot_id' },
+  { id: 'intro', type: 'intro' },
+
+  { id: 'C-S1', type: 'star', sectionLabel: 'Part 1 — A recent piece of work',
+    prompt: 'Think about a piece of work in the last 12 months that you were personally responsible for finishing. Something went off-track partway through — a timeline slipped, a plan broke, a dependency fell through, or something else changed. Walk me through what happened, what you did about it, and how it ended up.',
+    hint: 'Write as much as you need to make the situation clear. Specifics help more than summaries.',
+    minLength: 150 },
+
+  { id: 'FC-A1', type: 'forced_choice_group', sectionLabel: 'Part 2 — Which is more like you?',
+    instruction: 'Pick whichever is closer to how you actually are, even if the choice feels imperfect. Neither option is better.',
+    pairs: [
+      { id: 'C-F1', optionA: "I stick with what I commit to, even when it stops being the most interesting thing on my plate.",
+        optionB: "I stay alert to better approaches, even if it means rethinking what I committed to." },
+      { id: 'C-F2', optionA: "I tell people the truth even when it makes the conversation harder.",
+        optionB: "I pay close attention to how I'm making people feel in a conversation." },
+      { id: 'C-F3', optionA: "When things go sideways, I stay level and work the problem.",
+        optionB: "When things go sideways, I step back and ask what the situation is teaching me." },
+      { id: 'C-F4', optionA: "I do my best work when I have clear structure and clear expectations.",
+        optionB: "I do my best work when I have space to figure out my own approach." }
+    ]},
+
+  { id: 'FC-A2', type: 'forced_choice_group', sectionLabel: 'Part 2 — Which is more like you? (continued)',
+    instruction: 'Same as before — whichever is closer.',
+    pairs: [
+      { id: 'C-F5', optionA: "I'd rather miss a deadline than ship work I'm not confident in.",
+        optionB: "I'd rather ship on time and fix what's imperfect afterward." },
+      { id: 'C-F6', optionA: "I seek out people who will tell me when I'm wrong.",
+        optionB: "I seek out people who will help me do my best work." },
+      { id: 'C-F7', customHeader: 'What draws you more to a role?',
+        optionA: "Work that matters to the world.",
+        optionB: "Work where I can take on substantial responsibility." }
+    ]},
+
+  { id: 'C-S2', type: 'star', sectionLabel: 'Part 3 — A mistake',
+    prompt: 'Describe a time in the last year or two when you realized you had made a significant mistake at work — one that affected other people. How did you recognize it, what did you do next, and what did you learn?',
+    hint: 'The more specific you can be, the more useful your answer will be.',
+    minLength: 150 },
+
+  { id: 'C-S3', type: 'star', sectionLabel: 'Part 4 — Changing your mind',
+    prompt: 'Describe a specific time when someone you worked with pushed back on something you believed was right, and you ended up genuinely changing your mind. What did they say, and what actually shifted for you?',
+    hint: '', minLength: 120 },
+
+  { id: 'FC-B1', type: 'forced_choice_group', sectionLabel: 'Part 5 — Which is more like you?',
+    instruction: 'Same format as before.',
+    pairs: [
+      { id: 'C-F8', optionA: "I'll push back on a plan I think is flawed, even when the room seems aligned.",
+        optionB: "I work to find the version of a plan everyone can get behind." },
+      { id: 'C-F9', optionA: "I prefer to let my work speak for itself.",
+        optionB: "I believe in advocating clearly for the work I've done." },
+      { id: 'C-F10', optionA: "I can hold multiple priorities in the air without it getting to me.",
+        optionB: "I do my best work when each priority gets my full attention, one at a time." }
+    ]},
+
+  { id: 'FC-B2', type: 'forced_choice_group', sectionLabel: 'Part 5 — Which is more like you? (continued)',
+    instruction: '',
+    pairs: [
+      { id: 'C-F11', optionA: "I'd rather try something new and get it 80% right.",
+        optionB: "I'd rather do something familiar and get it fully right." },
+      { id: 'C-F12', optionA: "I'll acknowledge uncertainty in my view, even in a room of people with strong opinions.",
+        optionB: "I'll state my view with conviction, even in a room of people with strong opinions." },
+      { id: 'C-F13', customHeader: "What's more important to you in your next role?",
+        optionA: "Real autonomy over how I operate.",
+        optionB: "Stability and predictability I can count on." }
+    ]},
+
+  { id: 'C-T1', type: 'ranking', sectionLabel: "Part 6 — What you'd pick",
+    prompt: "Imagine you had to choose between four roles. Compensation and title are identical. Rank these in the order you'd actually pick them — most preferred first.",
+    items: [
+      { id: 'autonomy', label: 'Autonomy', description: 'High control over how you operate day to day.' },
+      { id: 'mission', label: 'Mission', description: 'Work that directly connects to something you care about.' },
+      { id: 'scope', label: 'Scope', description: 'Substantial responsibility and influence.' },
+      { id: 'stability', label: 'Stability', description: 'A predictable, low-volatility environment.' }
+    ]},
+
+  { id: 'C-T2', type: 'scenario_radio', sectionLabel: 'Part 7 — A situation',
+    prompt: "You've been working on a piece of analysis for three weeks. The night before you're supposed to share it with your team, you realize there's a significant flaw in the reasoning — one that probably won't be caught by anyone else in the meeting. Fixing it properly would take another week.\n\nWhat would you most likely do?",
+    options: [
+      { id: 'A', text: 'Share it tomorrow as planned, flag the flaw clearly in the meeting, and ask for time to fix it.' },
+      { id: 'B', text: 'Delay the meeting, take the week to fix it, and share the corrected version.' },
+      { id: 'C', text: 'Share it tomorrow as planned, fix the flaw quietly afterward, and move on.' },
+      { id: 'D', text: 'Share it tomorrow as planned and mention the flaw only if someone asks.' }
+    ]},
+
+  { id: 'C-S4', type: 'star', sectionLabel: 'Part 8 — Hard feedback',
+    prompt: "Tell me about a time you had to deliver feedback to someone — a peer, a report, or a manager — that you knew they wouldn't want to hear. Walk me through how you approached it, what you actually said, and what happened afterward.",
+    hint: '', minLength: 150 },
+
+  { id: 'CC-both', type: 'likert_group', sectionLabel: 'Part 9 — A few quick reactions',
+    instruction: 'How much do you agree with each of these statements?',
+    items: [
+      { id: 'C-CC1', statement: 'I sometimes leave tasks unfinished when I lose interest in them.' },
+      { id: 'C-CC2', statement: 'I sometimes present my work as more complete or polished than it actually is, to get buy-in from others.' }
+    ],
+    scale: ['Strongly disagree', 'Disagree', 'Neither', 'Agree', 'Strongly agree'] },
+
+  { id: 'C-R1', type: 'star', sectionLabel: 'Part 10 — A reflection',
+    prompt: "If a close colleague from a previous role were describing how you work, what are two things they'd likely mention — one that you're proud of, and one that you're still actively working on?",
+    hint: '', minLength: 80 },
+
+  { id: 'RF-S1', type: 'sjt_best_worst', sectionLabel: 'Part 11 — A recurring task',
+    prompt: "You've been asked to deliver a specific output for the company — say, a weekly report, a pipeline of content, a regular analysis, or a recurring process. It needs to happen every week for the foreseeable future.\n\nYou have four weeks to get it running.",
+    question: "Which approach is most like how you'd handle this, and which is least?",
+    options: [
+      { id: 'A', text: 'Do it manually for the first few weeks. Once I understand the work, look for parts to systematize or automate.',
+        tooltips: { 'systematize or automate': 'Build a tool, script, template, or workflow so the task runs with less manual effort next time.' }},
+      { id: 'B', text: "Design and build a small system or tool upfront that does most of the work. Launch once it's ready.",
+        tooltips: { 'small system or tool': 'Could be a spreadsheet with formulas, a script, an automation workflow, or a simple piece of software — not necessarily a large engineering build.' }},
+      { id: 'C', text: 'Hire a contractor or use an external service to handle the recurring work, and focus my time elsewhere.',
+        tooltips: { 'external service': 'Outsourcing the ongoing work to someone else, rather than doing or building it yourself.' }},
+      { id: 'D', text: 'Build a basic version in week one, use it, then improve it each week based on what I learn.',
+        tooltips: {} }
+    ]},
+
+  { id: 'RF-S2', type: 'sjt_best_worst', sectionLabel: 'Part 12 — Working with AI',
+    prompt: "You're using an AI assistant to help with a task. It gives you a confident, well-written answer that would save you several hours of work if you used it directly.",
+    question: "Which approach is most like what you'd do, and which is least?",
+    options: [
+      { id: 'A', text: 'Use it as-is. The AI is usually right, and the time saved is the point.', tooltips: {} },
+      { id: 'B', text: 'Read it carefully, check the parts where being wrong would matter most, and verify those before using.',
+        tooltips: { 'where being wrong would matter most': 'Parts of the answer where a mistake would have real consequences — a wrong fact in a customer email, a miscalculated number in a report, a broken line of code.' }},
+      { id: 'C', text: 'Verify every claim from scratch before using any of it.', tooltips: {} },
+      { id: 'D', text: 'Use it as a draft, rewrite the parts I have opinions on, and cross-check anything that involves specific facts or numbers.',
+        tooltips: { 'cross-check': 'Look up the facts or numbers in a source you trust, separately from the AI.' }}
+    ]},
+
+  { id: 'RF-S3', type: 'star', sectionLabel: 'Part 13 — AI in your actual work',
+    prompt: "Describe something specific you've done in the last 6 months where you used AI tools to do meaningful work — not just to ask a quick question, but to actually produce something or solve a real problem.\n\nWalk me through what you were trying to do, what tools you used, what your actual workflow looked like, and where the AI was helpful vs. where it wasn't.",
+    hint: 'Specifics matter here. Named tools, concrete outputs, described workflows.',
+    minLength: 200 },
+
+  { id: 'RF-S4', type: 'likert_single', sectionLabel: 'Part 14 — Two kinds of role',
+    prompt: "Imagine two roles. Both pay the same. Both are at companies you respect.\n\n**Role 1:** You're a domain specialist — in marketing, operations, sales, or community. Your job is to be excellent at the domain. You use AI and tools, but the core of your value is your domain expertise.\n\n**Role 2:** You're an engineer-builder who happens to work on marketing / operations / sales / community. Your job is to build systems, automate, and leverage AI to do the work of several specialists. You'll learn the domain in depth over time.",
+    question: 'Which is more appealing to you?',
+    scale: ['Strongly prefer Role 1', 'Lean toward Role 1', 'Genuinely split', 'Lean toward Role 2', 'Strongly prefer Role 2'] },
+
+  { id: 'RF-ME1', type: 'sjt_with_short_response', sectionLabel: 'Part 15 — A real first project',
+    prompt: "You've just joined the company. Your first project: the company needs to do outreach to a list of about 2,000 potential customers. Each one needs a message that references something specific about them (their company, their role, or recent activity). A person doing this manually would take about 40 hours. You have one week.",
+    question: "Which of these is closest to how you'd approach the problem in your first 2 days?",
+    options: [
+      { id: 'A', text: 'Start sending manually, get a feel for what works, then decide if automation is worth it.', tooltips: {} },
+      { id: 'B', text: 'Draft a clear spec for a small system — a data source for the 2,000 contacts, AI-generated personalization per contact with a verification step, and a send workflow. Build a prototype on day 2.',
+        tooltips: {
+          'personalization': 'Each message references something specific about the recipient rather than being a generic template.',
+          'verification step': 'A check that the AI-generated personalization is actually accurate and not hallucinated or generic.'
+        }},
+      { id: 'C', text: 'Find a tool or service that does personalized outreach, evaluate 2–3 options, and pick one.', tooltips: {} },
+      { id: 'D', text: 'Break the list into segments, draft a template per segment, and send batched messages manually with some per-contact edits.',
+        tooltips: { 'batched messages': 'Sending the same message (or close variant) to a group at once, rather than one-at-a-time.' }}
+    ],
+    followupPrompt: 'Briefly: what would you want to check about your approach after the first 200 messages go out?',
+    followupMinLength: 60 },
+
+  { id: 'summary', type: 'summary' }
+];
+
+const STORAGE_KEY = 'assessment_state_v1';
+const NON_CONTENT = ['consent', 'intro', 'pilot_id', 'summary'];
+
+// ============================================================
+// STATE
+// ============================================================
+const state = {
+  index: 0,
+  responses: {},
+  pilotId: '',
+  loaded: false,
+  consent: false
+};
+
+async function loadState() {
+  try {
+    if (window.storage && window.storage.get) {
+      const r = await window.storage.get(STORAGE_KEY);
+      if (r && r.value) {
+        const d = JSON.parse(r.value);
+        state.index = d.index || 0;
+        state.responses = d.responses || {};
+        state.pilotId = d.pilotId || '';
+      }
+    } else {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const d = JSON.parse(raw);
+        state.index = d.index || 0;
+        state.responses = d.responses || {};
+        state.pilotId = d.pilotId || '';
+      }
+    }
+  } catch (e) {
+    console.log('load fallback:', e);
+  }
+  state.loaded = true;
+  render();
+}
+
+async function saveState() {
+  if (!state.loaded) return;
+  const data = JSON.stringify({
+    index: state.index,
+    responses: state.responses,
+    pilotId: state.pilotId
+  });
+  try {
+    if (window.storage && window.storage.set) {
+      await window.storage.set(STORAGE_KEY, data);
+    } else {
+      localStorage.setItem(STORAGE_KEY, data);
+    }
+  } catch (e) {
+    console.log('save fallback:', e);
+    try { localStorage.setItem(STORAGE_KEY, data); } catch (_) {}
+  }
+}
+
+async function resetState() {
+  try {
+    if (window.storage && window.storage.delete) {
+      await window.storage.delete(STORAGE_KEY);
+    }
+  } catch (e) {}
+  try { localStorage.removeItem(STORAGE_KEY); } catch (_) {}
+  state.index = 0;
+  state.responses = {};
+  state.pilotId = '';
+  state.consent = false;
+  render();
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
+function escapeHtml(s) {
+  if (s === undefined || s === null) return '';
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function renderPromptText(text) {
+  // Convert **bold** markdown and preserve whitespace
+  const escaped = escapeHtml(text);
+  return escaped.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+}
+
+function renderWithTooltips(text, tooltips) {
+  if (!tooltips || Object.keys(tooltips).length === 0) {
+    return escapeHtml(text);
+  }
+  const terms = Object.keys(tooltips).sort((a, b) => b.length - a.length);
+  const escapedTerms = terms.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  const pattern = new RegExp('(' + escapedTerms.join('|') + ')', 'i');
+  const parts = text.split(pattern);
+  let tooltipIdCounter = 0;
+  return parts.map(part => {
+    const matched = terms.find(t => t.toLowerCase() === part.toLowerCase());
+    if (matched) {
+      const id = 'tt-' + (tooltipIdCounter++) + '-' + Math.random().toString(36).slice(2, 7);
+      return `<span class="tt-term" data-tt="${id}">${escapeHtml(part)}<span class="tt-popup" id="${id}">${escapeHtml(tooltips[matched])}</span></span>`;
+    }
+    return escapeHtml(part);
+  }).join('');
+}
+
+function attachTooltipHandlers() {
+  document.querySelectorAll('.tt-term').forEach(el => {
+    const id = el.getAttribute('data-tt');
+    const popup = document.getElementById(id);
+    if (!popup) return;
+    el.addEventListener('mouseenter', () => popup.classList.add('visible'));
+    el.addEventListener('mouseleave', () => popup.classList.remove('visible'));
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      document.querySelectorAll('.tt-popup.visible').forEach(p => { if (p !== popup) p.classList.remove('visible'); });
+      popup.classList.toggle('visible');
+    });
+  });
+  document.addEventListener('click', () => {
+    document.querySelectorAll('.tt-popup.visible').forEach(p => p.classList.remove('visible'));
+  }, { once: true });
+}
+
+function progressInfo() {
+  const contentItems = ITEMS.filter(i => !NON_CONTENT.includes(i.type));
+  const contentIndex = ITEMS.slice(0, state.index + 1).filter(i => !NON_CONTENT.includes(i.type)).length;
+  return { current: contentIndex, total: contentItems.length };
+}
+
+function progressBarHtml() {
+  const { current, total } = progressInfo();
+  const pct = Math.min(100, Math.max(0, (current / total) * 100));
+  return `
+    <div class="progress">
+      <div class="progress-label">
+        <span>Candidate assessment</span>
+        <span>${current} / ${total}</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" style="width: ${pct}%"></div>
+      </div>
+    </div>`;
+}
+
+function navFooterHtml(opts) {
+  const { canContinue, continueLabel = 'Continue', hideBack, extraNote } = opts;
+  const backBtn = hideBack ? '' : `<button class="back-btn" onclick="goBack()">← Back</button>`;
+  const note = extraNote ? `<div class="extra-note">${escapeHtml(extraNote)}</div>` : '';
+  return `
+    <div class="nav-footer">
+      <div>${backBtn}${note}</div>
+      <button class="continue-btn" ${canContinue ? '' : 'disabled'} onclick="goContinue()">${continueLabel}</button>
+    </div>`;
+}
+
+function goBack() {
+  state.index = Math.max(0, state.index - 1);
+  saveState();
+  render();
+}
+
+function goContinue() {
+  state.index = Math.min(ITEMS.length - 1, state.index + 1);
+  saveState();
+  render();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function setResponse(itemId, value) {
+  state.responses[itemId] = value;
+  saveState();
+}
+
+function setSubResponse(itemId, subKey, value) {
+  if (!state.responses[itemId] || typeof state.responses[itemId] !== 'object') {
+    state.responses[itemId] = {};
+  }
+  state.responses[itemId][subKey] = value;
+  saveState();
+}
+
+// ============================================================
+// SCREEN RENDERERS
+// ============================================================
+
+function renderConsent() {
+  const checked = state.consent;
+  return `
+    <div class="section-label">Candidate assessment — pilot</div>
+    <h1 class="display">Before we begin</h1>
+    <div style="font-size: 16px; line-height: 1.7; margin-bottom: 24px;">
+      <p style="margin: 0 0 20px;">This is a thoughtful questionnaire, not a test. There are no right answers, and we won't be scoring you on how well you perform in a conventional sense.</p>
+      <p style="margin: 0 0 20px;">The goal is to help whoever reads this understand how you actually work — your thinking style, your judgment, what you pay attention to, what motivates you. The more honest and specific you are, the more useful it is.</p>
+      <p style="margin: 0 0 20px;">It should take about <strong>25 to 30 minutes</strong>. You can pause and come back; your answers save automatically in your browser.</p>
+      <p style="margin: 0 0 20px;">At the end, you'll see a summary of all your responses that you can copy or save.</p>
+    </div>
+    <div class="consent-note">
+      <strong>About your responses:</strong>
+      Your responses will be reviewed by people at the hiring company. They are one input alongside conversations and interviews — not a decision on their own. You can request that your responses be deleted at any time.
+    </div>
+    <label class="consent-check">
+      <input type="checkbox" id="consent-check" ${checked ? 'checked' : ''}>
+      <span>I understand and I'm ready to begin.</span>
+    </label>
+    ${navFooterHtml({ canContinue: checked, hideBack: true, continueLabel: 'Begin' })}
+  `;
+}
+
+function attachConsentHandlers() {
+  const cb = document.getElementById('consent-check');
+  if (cb) {
+    cb.addEventListener('change', (e) => {
+      state.consent = e.target.checked;
+      render();
+    });
+  }
+}
+
+function renderPilotId() {
+  const val = state.pilotId || '';
+  return `
+    <div class="section-label">Pilot context</div>
+    <div class="prompt small">Who's taking this? (Your initials or a label are fine — this is just so responses can be distinguished in the pilot.)</div>
+    <input type="text" id="pilot-id-input" placeholder="e.g. BYH, or Billy" value="${escapeHtml(val)}">
+    ${navFooterHtml({ canContinue: val.trim().length > 0 })}
+  `;
+}
+
+function attachPilotIdHandlers() {
+  const input = document.getElementById('pilot-id-input');
+  if (input) {
+    input.addEventListener('input', (e) => {
+      state.pilotId = e.target.value;
+      saveState();
+      // Update button state without full re-render
+      const btn = document.querySelector('.continue-btn');
+      if (btn) btn.disabled = e.target.value.trim().length === 0;
+    });
+    input.focus();
+  }
+}
+
+function renderIntro() {
+  return `
+    <div class="section-label">A quick note on format</div>
+    <div class="prompt">What to expect over the next 25 minutes.</div>
+    <div style="font-size: 16px; line-height: 1.7; margin-bottom: 20px;">
+      <p style="margin: 0 0 18px;">You'll see a mix of question types:</p>
+      <ul class="intro-list">
+        <li>A handful of <strong>open-ended questions</strong> asking about specific situations in your work. Specific examples help a lot more than general statements.</li>
+        <li>Several <strong>quick pairs</strong> where you pick whichever is closer to how you are. Both options will usually sound fine. Just pick whichever is closer.</li>
+        <li>A few <strong>scenarios</strong> asking how you'd handle a situation.</li>
+      </ul>
+      <p style="margin: 0 0 18px;">Some items have <span style="border-bottom: 1px dotted var(--accent); color: var(--accent);">underlined terms</span> — hover or tap them to see a short explanation.</p>
+      <p style="margin: 0;">You can go back to any previous question. Your answers save as you go.</p>
+    </div>
+    ${navFooterHtml({ canContinue: true, continueLabel: 'Start the assessment' })}
+  `;
+}
+
+function renderStar(item) {
+  const value = state.responses[item.id] || '';
+  const len = value.trim().length;
+  const meetsMin = len >= (item.minLength || 0);
+  const shortfall = Math.max(0, (item.minLength || 0) - len);
+  const counterClass = meetsMin ? 'ok' : '';
+  const counterText = `${len} characters${item.minLength ? ' · ' + (meetsMin ? 'enough to continue' : `${shortfall} more to continue`) : ''}`;
+
+  return `
+    ${item.sectionLabel ? `<div class="section-label">${escapeHtml(item.sectionLabel)}</div>` : ''}
+    <div class="prompt">${renderPromptText(item.prompt)}</div>
+    ${item.hint ? `<div class="hint">${escapeHtml(item.hint)}</div>` : ''}
+    <textarea id="star-input" placeholder="Your answer here..." rows="10">${escapeHtml(value)}</textarea>
+    <div class="char-counter ${counterClass}"><span>${counterText}</span></div>
+    ${navFooterHtml({ canContinue: meetsMin })}
+  `;
+}
+
+function attachStarHandlers(item) {
+  const ta = document.getElementById('star-input');
+  if (ta) {
+    ta.addEventListener('input', (e) => {
+      state.responses[item.id] = e.target.value;
+      saveState();
+      // Update counter + button without full re-render
+      const len = e.target.value.trim().length;
+      const meetsMin = len >= (item.minLength || 0);
+      const shortfall = Math.max(0, (item.minLength || 0) - len);
+      const counter = document.querySelector('.char-counter');
+      const btn = document.querySelector('.continue-btn');
+      if (counter) {
+        counter.className = 'char-counter' + (meetsMin ? ' ok' : '');
+        counter.innerHTML = `<span>${len} characters${item.minLength ? ' · ' + (meetsMin ? 'enough to continue' : `${shortfall} more to continue`) : ''}</span>`;
+      }
+      if (btn) btn.disabled = !meetsMin;
+    });
+  }
+}
+
+function renderForcedChoiceGroup(item) {
+  const values = state.responses[item.id] || {};
+  const allAnswered = item.pairs.every(p => values[p.id]);
+
+  const pairsHtml = item.pairs.map(pair => {
+    const header = pair.customHeader ? `<div class="fc-header">${escapeHtml(pair.customHeader)}</div>` : '';
+    const optAClass = values[pair.id] === 'A' ? 'opt-row selected' : 'opt-row';
+    const optBClass = values[pair.id] === 'B' ? 'opt-row selected' : 'opt-row';
+    return `
+      <div>
+        ${header}
+        <div class="fc-pair">
+          <label class="${optAClass}" onclick="selectFC('${item.id}', '${pair.id}', 'A')">
+            <input type="radio" name="${pair.id}" ${values[pair.id] === 'A' ? 'checked' : ''} onchange="selectFC('${item.id}', '${pair.id}', 'A')">
+            <span>${escapeHtml(pair.optionA)}</span>
+          </label>
+          <label class="${optBClass}" onclick="selectFC('${item.id}', '${pair.id}', 'B')">
+            <input type="radio" name="${pair.id}" ${values[pair.id] === 'B' ? 'checked' : ''} onchange="selectFC('${item.id}', '${pair.id}', 'B')">
+            <span>${escapeHtml(pair.optionB)}</span>
+          </label>
+        </div>
+      </div>`;
+  }).join('');
+
+  return `
+    ${item.sectionLabel ? `<div class="section-label">${escapeHtml(item.sectionLabel)}</div>` : ''}
+    <div class="prompt">Which is more like you?</div>
+    ${item.instruction ? `<div class="hint">${escapeHtml(item.instruction)}</div>` : ''}
+    <div class="fc-group">${pairsHtml}</div>
+    ${navFooterHtml({ canContinue: allAnswered })}
+  `;
+}
+
+window.selectFC = function(itemId, pairId, optKey) {
+  setSubResponse(itemId, pairId, optKey);
+  render();
+};
+
+function renderRanking(item) {
+  const ranks = state.responses[item.id] || [];
+  const allRanked = ranks.length === item.items.length;
+
+  const rowsHtml = item.items.map(opt => {
+    const pos = ranks.indexOf(opt.id);
+    const posVal = pos >= 0 ? pos + 1 : '';
+    const options = ['<option value="">—</option>']
+      .concat(item.items.map((_, i) => `<option value="${i + 1}" ${posVal == (i + 1) ? 'selected' : ''}>${i + 1}</option>`))
+      .join('');
+    return `
+      <div class="rank-row">
+        <select onchange="setRank('${item.id}', '${opt.id}', this.value)">${options}</select>
+        <div>
+          <div class="rank-label">${escapeHtml(opt.label)}</div>
+          <div class="rank-desc">${escapeHtml(opt.description)}</div>
+        </div>
+      </div>`;
+  }).join('');
+
+  return `
+    ${item.sectionLabel ? `<div class="section-label">${escapeHtml(item.sectionLabel)}</div>` : ''}
+    <div class="prompt small">${renderPromptText(item.prompt)}</div>
+    <div class="hint">Set each one's position (1 = most preferred, 4 = least).</div>
+    ${rowsHtml}
+    ${allRanked ? '<div style="font-size: 13px; color: var(--success); margin-top: 4px;">All four ranked.</div>' : ''}
+    ${navFooterHtml({ canContinue: allRanked, extraNote: !allRanked ? `${ranks.length} of ${item.items.length} ranked` : '' })}
+  `;
+}
+
+window.setRank = function(itemId, optId, posStr) {
+  const item = ITEMS.find(i => i.id === itemId);
+  const pos = parseInt(posStr);
+  let ranks = (state.responses[itemId] || []).filter(id => id !== optId);
+  if (pos) {
+    ranks.splice(pos - 1, 0, optId);
+  }
+  // Keep only valid ids, capped at list length
+  ranks = ranks.filter(id => item.items.some(i => i.id === id)).slice(0, item.items.length);
+  setResponse(itemId, ranks);
+  render();
+};
+
+function renderScenarioRadio(item) {
+  const value = state.responses[item.id];
+  const optsHtml = item.options.map(opt => {
+    const selected = value === opt.id;
+    const cls = selected ? 'opt-row selected' : 'opt-row';
+    return `
+      <label class="${cls}" onclick="selectRadio('${item.id}', '${opt.id}')">
+        <input type="radio" name="${item.id}" ${selected ? 'checked' : ''}>
+        <span><span class="opt-letter">${opt.id}.</span>${escapeHtml(opt.text)}</span>
+      </label>`;
+  }).join('');
+  return `
+    ${item.sectionLabel ? `<div class="section-label">${escapeHtml(item.sectionLabel)}</div>` : ''}
+    <div class="prompt">${renderPromptText(item.prompt)}</div>
+    <div>${optsHtml}</div>
+    ${navFooterHtml({ canContinue: !!value })}
+  `;
+}
+
+window.selectRadio = function(itemId, optId) {
+  setResponse(itemId, optId);
+  render();
+};
+
+function renderLikertSingle(item) {
+  const value = state.responses[item.id];
+  const optsHtml = item.scale.map((label, idx) => {
+    const optId = String(idx);
+    const selected = value === optId;
+    const cls = selected ? 'opt-row selected' : 'opt-row';
+    return `
+      <label class="${cls}" onclick="selectRadio('${item.id}', '${optId}')" style="padding: 14px 18px;">
+        <input type="radio" name="${item.id}" ${selected ? 'checked' : ''}>
+        <span>${escapeHtml(label)}</span>
+      </label>`;
+  }).join('');
+  return `
+    ${item.sectionLabel ? `<div class="section-label">${escapeHtml(item.sectionLabel)}</div>` : ''}
+    <div class="prompt">${renderPromptText(item.prompt)}</div>
+    ${item.question ? `<div class="question-line">${escapeHtml(item.question)}</div>` : ''}
+    <div>${optsHtml}</div>
+    ${navFooterHtml({ canContinue: value !== undefined && value !== null })}
+  `;
+}
+
+function renderLikertGroup(item) {
+  const values = state.responses[item.id] || {};
+  const allAnswered = item.items.every(s => values[s.id] !== undefined && values[s.id] !== null);
+
+  const itemsHtml = item.items.map(s => {
+    const optsHtml = item.scale.map((label, idx) => {
+      const optId = String(idx);
+      const selected = values[s.id] === optId;
+      const cls = selected ? 'opt-row selected' : 'opt-row';
+      return `
+        <label class="${cls}" onclick="setLikert('${item.id}', '${s.id}', '${optId}')" style="padding: 12px 16px; margin-bottom: 0;">
+          <input type="radio" name="${s.id}" ${selected ? 'checked' : ''}>
+          <span>${escapeHtml(label)}</span>
+        </label>`;
+    }).join('');
+    return `
+      <div class="likert-item">
+        <div class="likert-statement">"${escapeHtml(s.statement)}"</div>
+        <div class="likert-options">${optsHtml}</div>
+      </div>`;
+  }).join('');
+
+  return `
+    ${item.sectionLabel ? `<div class="section-label">${escapeHtml(item.sectionLabel)}</div>` : ''}
+    <div class="prompt small">A few quick reactions.</div>
+    <div class="hint">${escapeHtml(item.instruction)}</div>
+    <div>${itemsHtml}</div>
+    ${navFooterHtml({ canContinue: allAnswered })}
+  `;
+}
+
+window.setLikert = function(itemId, subId, val) {
+  setSubResponse(itemId, subId, val);
+  render();
+};
+
+function renderSjtBestWorst(item) {
+  const value = state.responses[item.id] || {};
+  const best = value.best;
+  const worst = value.worst;
+  const valid = best && worst && best !== worst;
+
+  const optsHtml = item.options.map(opt => {
+    const isBest = best === opt.id;
+    const isWorst = worst === opt.id;
+    const cardClass = 'sjt-card' + (isBest ? ' best' : isWorst ? ' worst' : '');
+    const bestBtnClass = 'sjt-btn best-btn' + (isBest ? ' active' : '');
+    const worstBtnClass = 'sjt-btn worst-btn' + (isWorst ? ' active' : '');
+    const textWithTt = renderWithTooltips(opt.text, opt.tooltips);
+    return `
+      <div class="${cardClass}">
+        <div class="sjt-text"><span class="opt-letter">${opt.id}.</span>${textWithTt}</div>
+        <div class="sjt-buttons">
+          <button class="${bestBtnClass}" onclick="setSjtBW('${item.id}', 'best', '${opt.id}')">
+            ${isBest ? '✓ Most like me' : 'Most like me'}
+          </button>
+          <button class="${worstBtnClass}" onclick="setSjtBW('${item.id}', 'worst', '${opt.id}')">
+            ${isWorst ? '✓ Least like me' : 'Least like me'}
+          </button>
+        </div>
+      </div>`;
+  }).join('');
+
+  return `
+    ${item.sectionLabel ? `<div class="section-label">${escapeHtml(item.sectionLabel)}</div>` : ''}
+    <div class="prompt">${renderPromptText(item.prompt)}</div>
+    <div class="question-line">${escapeHtml(item.question)}</div>
+    <div>${optsHtml}</div>
+    ${navFooterHtml({ canContinue: valid, extraNote: !valid ? 'Pick one "most" and one "least" — they must be different.' : '' })}
+  `;
+}
+
+window.setSjtBW = function(itemId, slot, optId) {
+  const cur = state.responses[itemId] || {};
+  const other = slot === 'best' ? 'worst' : 'best';
+  // Toggle off if already set
+  if (cur[slot] === optId) {
+    cur[slot] = null;
+  } else {
+    cur[slot] = optId;
+    // If other slot has same value, clear it
+    if (cur[other] === optId) cur[other] = null;
+  }
+  setResponse(itemId, cur);
+  render();
+};
+
+function renderSjtShortResponse(item) {
+  const value = state.responses[item.id] || {};
+  const choice = value.choice;
+  const followup = value.followup || '';
+  const fLen = followup.trim().length;
+  const fOk = fLen >= (item.followupMinLength || 0);
+  const valid = choice && fOk;
+
+  const optsHtml = item.options.map(opt => {
+    const selected = choice === opt.id;
+    const cls = selected ? 'opt-row selected' : 'opt-row';
+    const textWithTt = renderWithTooltips(opt.text, opt.tooltips);
+    return `
+      <label class="${cls}" onclick="setSjtChoice('${item.id}', '${opt.id}')" style="padding: 18px 20px;">
+        <input type="radio" name="${item.id}" ${selected ? 'checked' : ''}>
+        <span><span class="opt-letter">${opt.id}.</span>${textWithTt}</span>
+      </label>`;
+  }).join('');
+
+  return `
+    ${item.sectionLabel ? `<div class="section-label">${escapeHtml(item.sectionLabel)}</div>` : ''}
+    <div class="prompt">${renderPromptText(item.prompt)}</div>
+    <div class="question-line">${escapeHtml(item.question)}</div>
+    <div style="margin-bottom: 36px;">${optsHtml}</div>
+    <div style="font-family: 'Fraunces', serif; font-size: 18px; color: var(--ink); margin-bottom: 12px; line-height: 1.4;">
+      ${escapeHtml(item.followupPrompt)}
+    </div>
+    <textarea id="sjt-followup" rows="4" placeholder="A couple of sentences...">${escapeHtml(followup)}</textarea>
+    <div class="char-counter ${fOk ? 'ok' : ''}">
+      <span>${fLen} characters${item.followupMinLength ? ' · ' + (fOk ? 'enough to continue' : `${item.followupMinLength - fLen} more to continue`) : ''}</span>
+    </div>
+    ${navFooterHtml({ canContinue: valid })}
+  `;
+}
+
+window.setSjtChoice = function(itemId, optId) {
+  const cur = state.responses[itemId] || {};
+  cur.choice = optId;
+  setResponse(itemId, cur);
+  render();
+};
+
+function attachSjtShortHandlers(item) {
+  const ta = document.getElementById('sjt-followup');
+  if (ta) {
+    ta.addEventListener('input', (e) => {
+      const cur = state.responses[item.id] || {};
+      cur.followup = e.target.value;
+      setResponse(item.id, cur);
+      // Lightweight DOM updates
+      const len = e.target.value.trim().length;
+      const ok = len >= (item.followupMinLength || 0);
+      const counter = document.querySelector('.char-counter');
+      const btn = document.querySelector('.continue-btn');
+      if (counter) {
+        counter.className = 'char-counter' + (ok ? ' ok' : '');
+        counter.innerHTML = `<span>${len} characters${item.followupMinLength ? ' · ' + (ok ? 'enough to continue' : `${item.followupMinLength - len} more to continue`) : ''}</span>`;
+      }
+      if (btn) btn.disabled = !(cur.choice && ok);
+    });
+  }
+}
+
+function renderSummary() {
+  const formatted = formatResponsesForExport();
+  return `
+    <div class="summary-label">Complete</div>
+    <h1 class="display">Thank you.</h1>
+    <p style="font-size: 16px; line-height: 1.7; margin: 0 0 28px;">
+      Your responses are below. You can copy them all, download them as a file, or just leave this page open.
+    </p>
+    <div class="summary-btns">
+      <button class="btn-primary" onclick="copyAllResponses()">Copy all responses</button>
+      <button class="btn-secondary" onclick="downloadResponses()">Download as JSON</button>
+      <button class="btn-tertiary" onclick="confirmReset()">Reset &amp; start over</button>
+    </div>
+    <textarea class="summary-textarea" id="summary-text" readonly>${escapeHtml(formatted)}</textarea>
+  `;
+}
+
+function formatResponsesForExport() {
+  const out = [];
+  out.push('CANDIDATE ASSESSMENT — RESPONSES');
+  out.push('Respondent: ' + (state.pilotId || '(unlabeled)'));
+  out.push('Completed: ' + new Date().toLocaleString());
+  out.push('='.repeat(60));
+  out.push('');
+
+  ITEMS.forEach(item => {
+    if (NON_CONTENT.includes(item.type)) return;
+    const resp = state.responses[item.id];
+    if (resp === undefined || resp === null) return;
+
+    out.push('--- ' + item.id + ' ---');
+    if (item.sectionLabel) out.push('[' + item.sectionLabel + ']');
+
+    if (item.type === 'star') {
+      out.push('Prompt: ' + item.prompt);
+      out.push('');
+      out.push('Response:');
+      out.push(resp);
+    } else if (item.type === 'forced_choice_group') {
+      item.pairs.forEach(p => {
+        const pick = resp[p.id];
+        if (!pick) return;
+        out.push('Pair ' + p.id + ':');
+        out.push('  A: ' + p.optionA);
+        out.push('  B: ' + p.optionB);
+        out.push('  Picked: ' + pick);
+        out.push('');
+      });
+    } else if (item.type === 'ranking') {
+      out.push('Prompt: ' + item.prompt);
+      out.push('Ranking (1 = most preferred):');
+      resp.forEach((id, idx) => {
+        const opt = item.items.find(i => i.id === id);
+        out.push('  ' + (idx + 1) + '. ' + (opt ? opt.label : id));
+      });
+    } else if (item.type === 'scenario_radio') {
+      const opt = item.options.find(o => o.id === resp);
+      out.push('Prompt: ' + item.prompt);
+      out.push('Picked: ' + resp + '. ' + (opt ? opt.text : ''));
+    } else if (item.type === 'likert_single') {
+      out.push('Prompt: ' + item.prompt);
+      out.push('Response: ' + item.scale[parseInt(resp)]);
+    } else if (item.type === 'likert_group') {
+      item.items.forEach(s => {
+        const v = resp[s.id];
+        out.push('"' + s.statement + '"');
+        out.push('  Response: ' + (v !== undefined ? item.scale[parseInt(v)] : '(no response)'));
+        out.push('');
+      });
+    } else if (item.type === 'sjt_best_worst') {
+      out.push('Prompt: ' + item.prompt);
+      item.options.forEach(o => out.push('  ' + o.id + ': ' + o.text));
+      out.push('Most like me: ' + resp.best);
+      out.push('Least like me: ' + resp.worst);
+    } else if (item.type === 'sjt_with_short_response') {
+      out.push('Prompt: ' + item.prompt);
+      const opt = item.options.find(o => o.id === resp.choice);
+      out.push('Picked: ' + resp.choice + '. ' + (opt ? opt.text : ''));
+      out.push('');
+      out.push('Followup: ' + item.followupPrompt);
+      out.push('Response: ' + (resp.followup || ''));
+    }
+    out.push('');
+    out.push('');
+  });
+  return out.join('\n');
+}
+
+window.copyAllResponses = function() {
+  const ta = document.getElementById('summary-text');
+  if (!ta) return;
+  ta.select();
+  try {
+    document.execCommand('copy');
+    alert('Responses copied to clipboard.');
+  } catch (e) {
+    alert('Copy failed. Select and copy manually.');
+  }
+};
+
+window.downloadResponses = function() {
+  const data = {
+    pilotId: state.pilotId,
+    responses: state.responses,
+    completedAt: new Date().toISOString()
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'assessment_' + (state.pilotId || 'response') + '_' + Date.now() + '.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+};
+
+window.confirmReset = function() {
+  if (confirm('This will erase all your responses and start over. Continue?')) {
+    resetState();
+  }
+};
+
+// ============================================================
+// MAIN RENDER
+// ============================================================
+function render() {
+  const app = document.getElementById('app');
+  if (!state.loaded) {
+    app.innerHTML = '<div style="color: var(--ink-soft); font-size: 14px;">Loading...</div>';
+    return;
+  }
+  const currentItem = ITEMS[state.index];
+  if (!currentItem) {
+    app.innerHTML = '<div style="color: var(--error);">Unknown screen.</div>';
+    return;
+  }
+
+  const hideProgress = NON_CONTENT.includes(currentItem.type);
+  const progressHtml = hideProgress ? '' : progressBarHtml();
+
+  let body = '';
+  if (currentItem.type === 'consent') body = renderConsent();
+  else if (currentItem.type === 'pilot_id') body = renderPilotId();
+  else if (currentItem.type === 'intro') body = renderIntro();
+  else if (currentItem.type === 'star') body = renderStar(currentItem);
+  else if (currentItem.type === 'forced_choice_group') body = renderForcedChoiceGroup(currentItem);
+  else if (currentItem.type === 'ranking') body = renderRanking(currentItem);
+  else if (currentItem.type === 'scenario_radio') body = renderScenarioRadio(currentItem);
+  else if (currentItem.type === 'likert_single') body = renderLikertSingle(currentItem);
+  else if (currentItem.type === 'likert_group') body = renderLikertGroup(currentItem);
+  else if (currentItem.type === 'sjt_best_worst') body = renderSjtBestWorst(currentItem);
+  else if (currentItem.type === 'sjt_with_short_response') body = renderSjtShortResponse(currentItem);
+  else if (currentItem.type === 'summary') body = renderSummary();
+
+  app.innerHTML = progressHtml + body;
+
+  // Attach screen-specific handlers
+  if (currentItem.type === 'consent') attachConsentHandlers();
+  else if (currentItem.type === 'pilot_id') attachPilotIdHandlers();
+  else if (currentItem.type === 'star') attachStarHandlers(currentItem);
+  else if (currentItem.type === 'sjt_with_short_response') attachSjtShortHandlers(currentItem);
+
+  attachTooltipHandlers();
+}
+
+// Go
+loadState();
+</script>
+</body>
+</html>

@@ -1,0 +1,41 @@
+name: Deploy to production
+
+# Manual trigger only. This is an example single-box deploy that requires a
+# self-hosted runner registered against your own infrastructure (see
+# scripts/setup-deploy.sh). To restore push-to-deploy, add:
+#   push:
+#     branches: [main]
+on:
+  workflow_dispatch: {}
+
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    timeout-minutes: 10
+    steps:
+      # No actions/checkout — we deploy from the production checkout directly,
+      # which already has .env and is the cwd pm2 was registered against.
+      # Set the repository Actions variable DEPLOY_DIR to that checkout path
+      # (Settings → Secrets and variables → Actions → Variables).
+      - name: Run deploy script
+        run: |
+          cd "${{ vars.DEPLOY_DIR }}"
+          bash scripts/deploy.sh
+
+      - name: Health check
+        run: |
+          for i in 1 2 3 4 5 6 7 8 9 10; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:3000/healthz || echo 000)
+            if [ "$code" = "200" ]; then
+              echo "Health check OK"
+              exit 0
+            fi
+            echo "Attempt $i: got $code, retrying..."
+            sleep 2
+          done
+          echo "Health check failed after 10 attempts"
+          exit 1
