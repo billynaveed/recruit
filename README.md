@@ -1,5 +1,8 @@
 # Recruit
 
+[![CI](https://github.com/billynaveed/recruit/actions/workflows/ci.yml/badge.svg)](https://github.com/billynaveed/recruit/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 An AI-assisted recruitment and candidate-assessment platform. Hiring teams
 create roles, invite candidates via tokenized magic links, and review a
 structured six-stage application. Written behavioral answers are scored against
@@ -144,7 +147,8 @@ from the environment, so adapt or replace them to suit your infrastructure. See
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md). Security issues: see
+See [CONTRIBUTING.md](CONTRIBUTING.md) and our
+[Code of Conduct](CODE_OF_CONDUCT.md). Security issues: see
 [SECURITY.md](SECURITY.md).
 
 ## License
