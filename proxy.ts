@@ -52,7 +52,7 @@ function rateLimitResponse(retryAfter: number): NextResponse {
   );
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // ── Rate limit candidate-facing routes ──────────────────────────────────
